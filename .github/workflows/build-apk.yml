@@ -30,11 +30,25 @@ jobs:
         env:
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
         run: |
-          openssl enc -d -aes-256-cbc -pbkdf2 -in arabic-release.jks.enc -out app_src/arabic_urdu/android/app/arabic-release.jks -pass "pass:$KEYSTORE_PASS"
+          KS=app_src/arabic_urdu/android/app/arabic-release.jks
+          ALIAS=farsiurdu
+          if openssl enc -d -aes-256-cbc -pbkdf2 -in arabic-release.jks.enc -out "$KS" -pass "pass:$KEYSTORE_PASS" 2>/dev/null; then
+            echo "Existing keystore decrypted."
+          else
+            echo "Creating a new keystore for this app."
+            ALIAS=arabicurdu
+            keytool -genkeypair -v -keystore "$KS" -alias arabicurdu -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASS" -keypass "$KEYSTORE_PASS" -dname "CN=Arabic Urdu Bol Chal, O=ArabicUrdu, C=PK"
+            openssl enc -aes-256-cbc -pbkdf2 -salt -in "$KS" -out arabic-release.jks.enc -pass "pass:$KEYSTORE_PASS"
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git add arabic-release.jks.enc
+            git commit -m "Add encrypted signing keystore for Arabic app"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
           cat > app_src/arabic_urdu/android/key.properties <<PROP
           storePassword=$KEYSTORE_PASS
           keyPassword=$KEYSTORE_PASS
-          keyAlias=farsiurdu
+          keyAlias=$ALIAS
           storeFile=arabic-release.jks
           PROP
 
