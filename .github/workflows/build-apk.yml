@@ -31,7 +31,7 @@ jobs:
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
         run: |
           KS=app_src/arabic_urdu/android/app/arabic-release.jks
-          ALIAS=farsiurdu
+          ALIAS=arabicurdu
           rm -f "$KS"
           if openssl enc -d -aes-256-cbc -pbkdf2 -in arabic-release.jks.enc -out /tmp/decrypted.jks -pass "pass:$KEYSTORE_PASS" 2>/dev/null && [ -s /tmp/decrypted.jks ]; then
             mv /tmp/decrypted.jks "$KS"
